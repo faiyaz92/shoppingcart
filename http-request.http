@@ -1,0 +1,12 @@
+###
+
+POST http://localhost:8080/api/users
+Content-Type: application/json
+X-Csrf-Token: ''
+{
+  "name": "asd",
+  "contactNumber": "qww",
+  "email": ""
+}
+
+###
