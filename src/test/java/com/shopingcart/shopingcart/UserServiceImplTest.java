@@ -47,7 +47,7 @@ public class UserServiceImplTest {
 
         List<UserDto> users = userServiceImpl.getAllUsers();
 
-        // Then
+
         assertNotNull(users);
         assertEquals(2, users.size());
         verify(userRepository, times(1)).findAll();
@@ -65,7 +65,7 @@ public class UserServiceImplTest {
 
         UserDto user = userServiceImpl.getUserById(1L);
 
-        // Then
+
         assertNotNull(user);
         assertEquals(1L, user.getId());
         verify(userRepository, times(1)).findById(1L);
@@ -95,7 +95,7 @@ public class UserServiceImplTest {
 
         UserDto createdUser = userServiceImpl.createUser(user);
 
-        // Then
+
         assertNotNull(createdUser);
         assertEquals(1L, createdUser.getId());
         verify(userRepository, times(1)).save(org.mockito.Mockito.any(UserEntity.class));
@@ -126,7 +126,7 @@ public class UserServiceImplTest {
 
         UserDto updatedUser = userServiceImpl.updateUser(user);
 
-        // Then
+
         assertNotNull(updatedUser);
         assertEquals(1L, updatedUser.getId());
         verify(userRepository, times(1)).findById(1L);
@@ -141,7 +141,7 @@ public class UserServiceImplTest {
 
         userServiceImpl.deleteUser(1L);
 
-        // Then
+
         verify(userRepository, times(1)).deleteById(1L);
     }
 
@@ -149,11 +149,7 @@ public class UserServiceImplTest {
     public void testUserExists() {
 
         when(userRepository.existsById(1L)).thenReturn(true);
-
-
         boolean exists = userServiceImpl.userExists(1L);
-
-        // Then
         assertTrue(exists);
         verify(userRepository, times(1)).existsById(1L);
     }
@@ -166,7 +162,7 @@ public class UserServiceImplTest {
 
         boolean exists = userServiceImpl.userExistsByEmail("Faiyaz@gmail.com");
 
-        // Then
+
         assertTrue(exists);
         verify(userRepository, times(1)).existsByEmail("Faiyaz@gmail.com");
     }
