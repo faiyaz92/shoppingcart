@@ -28,7 +28,7 @@ public class UserServiceImplTest {
 
     @Test
     public void testGetAllUsers() {
-        // Given
+
         List<UserEntity> userEntities = new ArrayList<>();
         UserEntity userEntity1 = new UserEntity();
         userEntity1.setId(1L);
@@ -44,7 +44,7 @@ public class UserServiceImplTest {
 
         when(userRepository.findAll()).thenReturn(userEntities);
 
-        // When
+
         List<UserDto> users = userServiceImpl.getAllUsers();
 
         // Then
@@ -55,14 +55,14 @@ public class UserServiceImplTest {
 
     @Test
     public void testGetUserByIdExisting() {
-        // Given
+
         UserEntity userEntity = new UserEntity();
         userEntity.setId(1L);
         userEntity.setName("Faiyaz");
         userEntity.setEmail("Faiyaz@gmail.com");
         when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
 
-        // When
+
         UserDto user = userServiceImpl.getUserById(1L);
 
         // Then
@@ -70,18 +70,17 @@ public class UserServiceImplTest {
         assertEquals(1L, user.getId());
         verify(userRepository, times(1)).findById(1L);
     }
+
     @Test
     public void testGetUserByIdNonExisting() {
-        // Given
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // When and Then
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
         assertNull(userServiceImpl.getUserById(1L));
     }
 
     @Test
     public void testCreateUser() {
-        // Given
+
         UserDto user = new UserDto();
         user.setId(1L);
         user.setName("Faiyaz");
@@ -93,7 +92,7 @@ public class UserServiceImplTest {
         userEntity.setEmail("Faiyaz@gmail.com");
         when(userRepository.save(org.mockito.Mockito.any(UserEntity.class))).thenReturn(userEntity);
 
-        // When
+
         UserDto createdUser = userServiceImpl.createUser(user);
 
         // Then
@@ -104,16 +103,14 @@ public class UserServiceImplTest {
 
     @Test(expected = RuntimeException.class)
     public void testCreateUserInvalidInput() {
-        // Given
-        UserDto user = null;
 
-        // When
+        UserDto user = null;
         userServiceImpl.createUser(user);
     }
 
     @Test
     public void testUpdateUserExisting() {
-        // Given
+
         UserDto user = new UserDto();
         user.setId(1L);
         user.setName("Faiyaz");
@@ -126,7 +123,7 @@ public class UserServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(userEntity));
         when(userRepository.save(org.mockito.Mockito.any(UserEntity.class))).thenReturn(userEntity);
 
-        // When
+
         UserDto updatedUser = userServiceImpl.updateUser(user);
 
         // Then
@@ -138,10 +135,10 @@ public class UserServiceImplTest {
 
     @Test
     public void testDeleteUser() {
-        // Given
+
         doNothing().when(userRepository).deleteById(1L);
 
-        // When
+
         userServiceImpl.deleteUser(1L);
 
         // Then
@@ -150,10 +147,10 @@ public class UserServiceImplTest {
 
     @Test
     public void testUserExists() {
-        // Given
+
         when(userRepository.existsById(1L)).thenReturn(true);
 
-        // When
+
         boolean exists = userServiceImpl.userExists(1L);
 
         // Then
@@ -163,10 +160,10 @@ public class UserServiceImplTest {
 
     @Test
     public void testUserExistsByEmail() {
-        // Given
+
         when(userRepository.existsByEmail("Faiyaz@gmail.com")).thenReturn(true);
 
-        // When
+
         boolean exists = userServiceImpl.userExistsByEmail("Faiyaz@gmail.com");
 
         // Then
