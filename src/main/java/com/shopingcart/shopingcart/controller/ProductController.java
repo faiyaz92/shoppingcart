@@ -1,6 +1,7 @@
 package com.shopingcart.shopingcart.controller;
 
 import com.shopingcart.shopingcart.data.ProductDto;
+import com.shopingcart.shopingcart.responses.SuccessResponse;
 import com.shopingcart.shopingcart.service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,14 +51,11 @@ public class ProductController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        try {
-            productService.deleteProduct(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<SuccessResponse> deleteProduct(@PathVariable Long id) {
+        SuccessResponse successResponse = productService.deleteProduct(id);
+        return ResponseEntity.ok(successResponse);  // Send success message from service
     }
+
     @GetMapping("/exists/{id}")
     public ResponseEntity<Boolean> productExists(@PathVariable Long id) {
         boolean exists = productService.productExists(id);

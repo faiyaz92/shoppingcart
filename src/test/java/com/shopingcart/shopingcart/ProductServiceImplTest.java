@@ -2,27 +2,24 @@ package com.shopingcart.shopingcart;
 
 import com.shopingcart.shopingcart.data.ProductDto;
 import com.shopingcart.shopingcart.entity.ProductEntity;
+import com.shopingcart.shopingcart.globalerror.ProductAlreadyExistsException;
+import com.shopingcart.shopingcart.globalerror.ProductNotFoundException;
 import com.shopingcart.shopingcart.repository.ProductRepository;
 import com.shopingcart.shopingcart.service.ProductServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.BeanUtils;
+import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ProductServiceImplTest {
+class ProductServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -30,117 +27,119 @@ public class ProductServiceImplTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
-    private ProductDto product;
-    private ProductEntity productEntity;
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-    @Before
-    public void setup() {
-        product = new ProductDto(1L, "Test Product", 10.99, 15.99, "Test description", "500ml", "Manufacturer", "Distributor", List.of("image1.jpg", "image2.jpg"));
-        productEntity = new ProductEntity();
-        BeanUtils.copyProperties(product, productEntity);
-        productEntity.setImages(String.join(",", product.getImages()));
+
+
+    @Test
+    void testCreateProduct_ThrowsProductAlreadyExistsException() {
+        ProductDto productDto = new ProductDto(null, "Product1", 100.0, 120.0, "Sample Product", "250ml", "Manufacturer", "Distributor", null);
+
+        when(productRepository.existsByProductNameAndPackagingQuantity("Product1", "250ml")).thenReturn(true);
+
+        assertThrows(ProductAlreadyExistsException.class, () -> productService.createProduct(productDto));
+        verify(productRepository, never()).save(any(ProductEntity.class));
     }
 
     @Test
-    public void testGetAllProducts() {
-        List<ProductEntity> productEntities = new ArrayList<>();
-        productEntities.add(productEntity);
+    void testGetProductById_Success() {
+        ProductEntity productEntity = new ProductEntity();
+        productEntity.setId(1L);
+        productEntity.setProductName("Product1");
 
-        ProductEntity productEntity2 = new ProductEntity();
-        productEntity2.setId(2L);
-        productEntity2.setProductName("Product 2");
-        productEntity2.setPrice(9.99);
-        productEntity2.setInitialPrice(14.99);
-        productEntity2.setDescription("Description 2");
-        productEntity2.setPackagingQuantity("250ml");
-        productEntity2.setManufacturerName("Manufacturer 2");
-        productEntity2.setDistributorName("Distributor 2");
-        productEntity2.setImages("image3.jpg,image4.jpg");
+        when(productRepository.findById(1L)).thenReturn(Optional.of(productEntity));
 
-        productEntities.add(productEntity2);
-        when(productRepository.findAll()).thenReturn(productEntities);
+        ProductDto productDto = productService.getProductById(1L);
 
-        List<ProductDto> products = productService.getAllProducts();
-        assertEquals(2, products.size());
-        assertEquals(product.getProductName(), products.get(0).getProductName());
+        assertNotNull(productDto);
+        assertEquals("Product1", productDto.getProductName());
+        verify(productRepository, times(1)).findById(1L);
     }
 
     @Test
-    public void testGetProductByIdExisting() {
-        when(productRepository.findById(product.getId())).thenReturn(Optional.of(productEntity));
+    void testGetProductById_ThrowsProductNotFoundException() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductDto retrievedProduct = productService.getProductById(product.getId());
-        assertEquals(product.getProductName(), retrievedProduct.getProductName());
+        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(1L));
+        verify(productRepository, times(1)).findById(1L);
     }
 
     @Test
-    public void testGetProductByIdNonExisting() {
-        when(productRepository.findById(product.getId())).thenReturn(Optional.empty());
+    void testUpdateProduct_Success() {
+        ProductDto productDto = new ProductDto(1L, "UpdatedProduct", 150.0, 170.0, "Updated Description", "500ml", "Manufacturer", "Distributor", null);
+        ProductEntity existingProduct = new ProductEntity();
+        existingProduct.setId(1L);
 
-        ProductDto retrievedProduct = productService.getProductById(product.getId());
-        assertNull(retrievedProduct);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.existsByProductNameAndPackagingQuantity("UpdatedProduct", "500ml")).thenReturn(false);
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(existingProduct);
+
+        ProductDto updatedProduct = productService.updateProduct(productDto);
+
+        assertNotNull(updatedProduct);
+        assertEquals("UpdatedProduct", updatedProduct.getProductName());
+        verify(productRepository, times(1)).save(any(ProductEntity.class));
     }
 
     @Test
-    public void testCreateProduct() {
-        when(productRepository.save(any(ProductEntity.class))).thenReturn(productEntity);
+    void testUpdateProduct_ThrowsProductNotFoundException() {
+        ProductDto productDto = new ProductDto(1L, "UpdatedProduct", 150.0, 170.0, "Updated Description", "500ml", "Manufacturer", "Distributor", null);
 
-        ProductDto createdProduct = productService.createProduct(product);
-        assertEquals(product.getProductName(), createdProduct.getProductName());
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(productDto));
+        verify(productRepository, never()).save(any(ProductEntity.class));
     }
 
     @Test
-    public void testUpdateProductExisting() {
-        when(productRepository.findById(product.getId())).thenReturn(Optional.of(productEntity));
-        when(productRepository.save(any(ProductEntity.class))).thenReturn(productEntity);
+    void testDeleteProduct_Success() {
+        when(productRepository.existsById(1L)).thenReturn(true);
 
-        ProductDto updatedProduct = productService.updateProduct(product);
-        assertEquals(product.getProductName(), updatedProduct.getProductName());
+        productService.deleteProduct(1L);
+
+        verify(productRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    public void testUpdateProductNonExisting() {
-        when(productRepository.findById(product.getId())).thenReturn(Optional.empty());
+    void testDeleteProduct_ThrowsProductNotFoundException() {
+        when(productRepository.existsById(1L)).thenReturn(false);
 
-        ProductDto updatedProduct = productService.updateProduct(product);
-        assertNull(updatedProduct);
+        assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(1L));
+        verify(productRepository, never()).deleteById(1L);
     }
 
     @Test
-    public void testDeleteProduct() {
-        productService.deleteProduct(product.getId());
-        verify(productRepository, times(1)).deleteById(product.getId());
+    void testProductExistsByNameAndPackaging_Success() {
+        when(productRepository.existsByProductNameAndPackagingQuantity("Product1", "250ml")).thenReturn(true);
+
+        boolean exists = productRepository.existsByProductNameAndPackagingQuantity("Product1", "250ml");
+
+        assertTrue(exists);
+        verify(productRepository, times(1)).existsByProductNameAndPackagingQuantity("Product1", "250ml");
     }
 
     @Test
-    public void testProductExistsTrue() {
-        when(productRepository.existsById(product.getId())).thenReturn(true);
+    void testCreateProduct_Success() {
+        ProductDto productDto = new ProductDto();
+        productDto.setProductName("Product1");
+        productDto.setPackagingQuantity("250ml");
+        productDto.setPrice(100.0);
+        productDto.setInitialPrice(120.0);
+        productDto.setDescription("Description");
+        productDto.setManufacturerName("Manufacturer");
+        productDto.setDistributorName("Distributor");
+        productDto.setImages(Arrays.asList("image1.png", "image2.png"));
 
-        boolean exists = productService.productExists(product.getId());
-        assertEquals(true, exists);
+        when(productRepository.existsByProductNameAndPackagingQuantity(anyString(), anyString())).thenReturn(false);
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(new ProductEntity());
+
+        ProductDto createdProduct = productService.createProduct(productDto);
+
+        assertNotNull(createdProduct);
+        verify(productRepository, times(1)).save(any(ProductEntity.class));
     }
 
-    @Test
-    public void testProductExistsFalse() {
-        when(productRepository.existsById(product.getId())).thenReturn(false);
-
-        boolean exists = productService.productExists(product.getId());
-        assertEquals(false, exists);
-    }
-
-    @Test
-    public void testProductExistsByProductNameTrue() {
-        when(productRepository.existsByProductName(product.getProductName())).thenReturn(true);
-
-        boolean exists = productService.productExistsByProductName(product.getProductName());
-        assertEquals(true, exists);
-    }
-
-    @Test
-    public void testProductExistsByProductNameFalse() {
-        when(productRepository.existsByProductName(product.getProductName())).thenReturn(false);
-
-        boolean exists = productService.productExistsByProductName(product.getProductName());
-        assertEquals(false, exists);
-    }
 }

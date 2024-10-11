@@ -1,12 +1,9 @@
 package com.shopingcart.shopingcart.service;
 
-import com.shopingcart.shopingcart.data.CartDto;
-import com.shopingcart.shopingcart.data.CartItemDto;
-
-import java.util.List;
+import com.shopingcart.shopingcart.responses.CartResponseDto;
 
 public interface CartService {
-    CartDto createCart(Long userId);
-    CartItemDto addProductToCart(Long cartId, Long productId, int quantity);
-    List<CartItemDto> getCartItems(Long cartId);
+    CartResponseDto createCart(Long userId);
+    CartResponseDto addProductToCart(Long cartId, Long productId, int quantity); // Change return type to CartResponseDto
+    CartResponseDto getCartItems(Long cartId);
 }

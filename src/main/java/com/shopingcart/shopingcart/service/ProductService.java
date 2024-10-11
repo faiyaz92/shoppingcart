@@ -1,6 +1,8 @@
 package com.shopingcart.shopingcart.service;
 
 import com.shopingcart.shopingcart.data.ProductDto;
+import com.shopingcart.shopingcart.responses.SuccessResponse;
+
 import java.util.List;
 
 public interface ProductService {
@@ -8,7 +10,7 @@ public interface ProductService {
     ProductDto getProductById(Long id);
     ProductDto createProduct(ProductDto product);
     ProductDto updateProduct(ProductDto product);
-    void deleteProduct(Long id);
+    SuccessResponse deleteProduct(Long id);
     boolean productExists(Long id);
     boolean productExistsByProductName(String productName);
 }
